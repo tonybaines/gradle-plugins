@@ -1,0 +1,9 @@
+System.properties['http.proxyHost']="proxy.intra.bt.com"
+System.properties['http.proxyPort']="8080"
+System.properties['http.nonProxyHosts']="*.bt.com|localhost"
+
+repositories {
+    mavenRepo urls: "file://" + System.getProperty('user.home') + "/.m2/repository/"
+    mavenRepo urls: "https://collaborate.bt.com/artefacts/content/groups/public" 
+    mavenCentral()
+}

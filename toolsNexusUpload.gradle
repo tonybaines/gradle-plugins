@@ -1,0 +1,27 @@
+apply plugin: 'maven'
+
+dependencies {
+		archives "org.apache.maven.wagon:wagon-http:1.0-beta-2"
+}
+configurations {
+	archives
+}
+
+artifacts {
+	archives jar
+}
+
+/*
+ * Define nexusUserName and nexusPassword in <home directory>/.gradle/gradle.properties
+ */
+uploadArchives {
+	repositories.mavenDeployer {
+		name = 'nexusDeployer'
+		repository(url: "https://collaborate.bt.com/artefacts/content/repositories/bt-dso-releases")  {
+			authentication(userName: nexusUserName, password: nexusPassword)
+		}
+		snapshotRepository(url: "https://collaborate.bt.com/artefacts/content/repositories/bt-dso-snapshots") {
+			authentication(userName: nexusUserName, password: nexusPassword)
+		}
+	}
+}

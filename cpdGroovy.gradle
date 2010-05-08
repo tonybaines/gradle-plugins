@@ -1,0 +1,38 @@
+cpdReportDir = "${reportsDir}/cpd"
+cpdReport = "${cpdReportDir}/cpdReport.xml"
+cpdStylesheet = 'https://collaborate.bt.com/svn/bt-dso/build/tags/gradle-1.0/resources/cpdhtml.xslt'
+configurations {
+    cpdConf
+}
+
+dependencies {
+    cpdConf group: 'pmd', name: 'pmd', version: '4.2.5'
+}
+
+task cpdGroovy << {
+    ant.mkdir(dir: cpdReportDir)
+    ant {
+        taskdef(name:'cpd', classname:'net.sourceforge.pmd.cpd.CPDTask', classpath: configurations.cpdConf.asPath)
+        cpd(minimumTokenCount:'5', ignoreLiterals:'true', ignoreIdentifiers:'true',
+                language: 'ruby', outputFile:cpdReport, format:'xml', encoding:'ASCII') {
+                    fileset(dir: "src/main/groovy") {
+                        include(name: '**/*.groovy')
+                    }
+                }
+        xslt ( in: cpdReport, out: "${cpdReportDir}/cpdReport.html") {
+            style {
+             url(url: cpdStylesheet)
+            }
+        }
+    }
+    analyseCpd(cpdReport)
+}
+check.dependsOn(cpdGroovy)
+
+def analyseCpd(reportXml, numLines=5) {
+    def cpdResults = new XmlSlurper().parse(reportXml)
+    def duplicatedBlocks = cpdResults.duplication.findAll { it.@lines.toInteger() > numLines }.size()
+    if (numLines > 0) {
+        logger.warn "CPD found ${duplicatedBlocks} blocks with more than ${numLines} lines duplicated"
+    }
+}

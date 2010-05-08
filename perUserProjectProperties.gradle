@@ -1,0 +1,9 @@
+Properties props = new Properties()
+user = System.properties['user.name']
+try {
+    file("${user}.properties").withInputStream  { props.load(it) }
+    props.each { String name, value -> project.setProperty(name, value) } 
+    logger.info "User-properties file ${user}.properties found - overriding project-specific properties"
+} catch (FileNotFoundException e) {
+    logger.info "User-properties file ${user}.properties not found - override project-specific properties here"
+}

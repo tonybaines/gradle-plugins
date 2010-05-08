@@ -1,0 +1,40 @@
+apply plugin: 'groovy'
+
+sourceSets.test.groovy.srcDir file('src/test/stories')
+storyReportDir = "${reportsDir}/stories"
+
+dependencies {
+    testRuntime (
+      [group: 'org.easyb', name: 'easyb', version: '0.9.6']
+    )
+    groovy (
+      [group: 'org.codehaus.groovy', name: 'groovy-all', version: '1.7.2'],
+      [group: 'commons-cli', name: 'commons-cli', version: '1.1']
+    )
+}
+configurations {
+    groovy
+}
+
+task easyb(dependsOn: [compileTestGroovy]) << {
+    ant.mkdir(dir: storyReportDir)
+    
+    pattern = (System.properties['story'] ?: '*')
+    ant.taskdef(name: 'easyb', classname: 'org.easyb.ant.BehaviorRunnerTask', classpath: configurations.testRuntime.asPath)
+    ant.easyb(failureProperty: 'easyb.failed') {
+      classpath {
+         pathelement(path: configurations.testRuntime.asPath)
+         pathelement(path: sourceSets.main.classesDir.absolutePath)
+         pathelement(path: sourceSets.test.classesDir.absolutePath)
+      }
+      report(location: "${storyReportDir}/story.txt", format: 'txtstory')
+      report(location: "${storyReportDir}/story.xml", format: 'xml')
+      report(location: "${storyReportDir}/story.html", format: 'html')
+      behaviors(dir: 'src/test/stories') {
+          include(name: '**/' + pattern + '.story')
+          include(name: '**/' + pattern + '.specification')
+      }
+    }
+    ant.fail(if: 'easyb.failed', message: 'EasyB stories failed')
+}
+test.dependsOn easyb
